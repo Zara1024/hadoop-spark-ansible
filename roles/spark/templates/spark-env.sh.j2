@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# spark-env.sh: 生成自 Ansible 自动化部署模板 (严格对齐 PDF 第 28 页)
+
+export JAVA_HOME={{ jdk_install_dir }}
+export SCALA_HOME={{ scala_install_dir }}
+export HADOOP_HOME={{ hadoop_install_dir }}
+export HADOOP_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop
+export YARN_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop
+export LANG="en_US.UTF-8"
+
+# 针对 YARN 集群模式增加的 Driver 与 Executor 配置
+export SPARK_LOG_DIR={{ spark_install_dir }}/logs

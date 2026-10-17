@@ -1,0 +1,20 @@
+[Unit]
+Description=Apache Spark History Server Service
+After=network.target
+
+[Service]
+Type=forking
+User={{ bigdata_user }}
+Group={{ bigdata_group }}
+Environment="JAVA_HOME={{ jdk_install_dir }}"
+Environment="SCALA_HOME={{ scala_install_dir }}"
+Environment="HADOOP_HOME={{ hadoop_install_dir }}"
+Environment="HADOOP_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop"
+Environment="SPARK_HOME={{ spark_install_dir }}"
+ExecStart={{ spark_install_dir }}/sbin/start-history-server.sh
+ExecStop={{ spark_install_dir }}/sbin/stop-history-server.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

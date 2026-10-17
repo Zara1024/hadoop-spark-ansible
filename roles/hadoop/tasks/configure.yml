@@ -1,0 +1,52 @@
+---
+# ==============================================================================
+# Hadoop 2.10.1 配置下发任务 (PDF 第 11~21 页)
+# ==============================================================================
+
+- name: 渲染 hadoop-env.sh
+  template:
+    src: hadoop-env.sh.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/hadoop-env.sh"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0755'
+
+- name: 渲染 core-site.xml
+  template:
+    src: core-site.xml.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/core-site.xml"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 渲染 hdfs-site.xml
+  template:
+    src: hdfs-site.xml.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/hdfs-site.xml"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 渲染 mapred-site.xml
+  template:
+    src: mapred-site.xml.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/mapred-site.xml"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 渲染 yarn-site.xml (包含 PDF 第 9 节调优参数)
+  template:
+    src: yarn-site.xml.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/yarn-site.xml"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 渲染从节点成员配置 slaves (PDF 第 20~21 页)
+  template:
+    src: slaves.j2
+    dest: "{{ hadoop_install_dir }}/etc/hadoop/slaves"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'

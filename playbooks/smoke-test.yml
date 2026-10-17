@@ -1,0 +1,61 @@
+---
+# ==============================================================================
+# 冒烟测试剧本 (smoke-test.yml)
+# 对应 PDF 第六节与第七节实战案例 (HDFS 读写、MapReduce 计算、Spark on YARN 提交)
+# ==============================================================================
+
+- name: "冒烟测试 1: HDFS 文件系统读写测试 (PDF 第 34, 39 页)"
+  hosts: spark01
+  gather_facts: false
+  tasks:
+    - name: 创建测试临时目录并写入测试数据
+      shell: |
+        source /etc/profile
+        hdfs dfs -rm -r -f /tmp/smoke_test || true
+        hdfs dfs -mkdir -p /tmp/smoke_test
+        echo "hello hadoop hello spark hello zookeeper" > /tmp/smoke_input.txt
+        hdfs dfs -put -f /tmp/smoke_input.txt /tmp/smoke_test/input.txt
+        hdfs dfs -cat /tmp/smoke_test/input.txt
+      register: hdfs_test_res
+      changed_when: false
+
+    - name: 验证 HDFS 读写输出
+      assert:
+        that:
+          - "'hello spark' in hdfs_test_res.stdout"
+        fail_msg: "HDFS 读写测试未通过！"
+
+- name: "冒烟测试 2: MapReduce on YARN 任务提交测试 (Pi 估算)"
+  hosts: spark01
+  gather_facts: false
+  tasks:
+    - name: 运行 Hadoop 自带 MapReduce Pi 示例程序
+      shell: |
+        source /etc/profile
+        hadoop jar {{ hadoop_install_dir }}/share/hadoop/mapreduce/hadoop-mapreduce-examples-{{ hadoop_version }}.jar pi 2 4
+      register: mr_pi_res
+      changed_when: false
+
+    - name: 打印 MapReduce Pi 测试结果
+      debug:
+        msg: "{{ mr_pi_res.stdout_lines[-3:] }}"
+
+- name: "冒烟测试 3: Spark on YARN 任务提交测试 (PDF 第 38 页 JavaSparkPi)"
+  hosts: spark04
+  gather_facts: false
+  tasks:
+    - name: 通过 spark-submit 以 YARN Client 模式提交 Spark 示例计算任务
+      shell: |
+        source /etc/profile
+        cd {{ spark_install_dir }}
+        ./bin/spark-submit \
+          --master yarn \
+          --deploy-mode client \
+          --class org.apache.spark.examples.JavaSparkPi \
+          ./examples/jars/spark-examples_2.11-{{ spark_version }}.jar 10
+      register: spark_pi_res
+      changed_when: false
+
+    - name: 打印 Spark on YARN 执行状态
+      debug:
+        msg: "Spark on YARN 运行成功！包含输出: {{ spark_pi_res.stdout_lines | select('search', 'Pi is') | list }}"

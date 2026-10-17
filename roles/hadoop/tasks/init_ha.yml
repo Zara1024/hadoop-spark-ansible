@@ -1,0 +1,145 @@
+---
+# ==============================================================================
+# Hadoop HA 初始化编排任务 (严格遵循 PDF 第 22~25 页时序规范)
+# 包含幂等安全锁机制，防止重复初始化破坏 HDFS 元数据
+# ==============================================================================
+
+# ----------------- 步骤 1: 启动 JournalNode 集群 -----------------
+- name: 在 spark04, spark05, spark06 上启动 JournalNode (PDF 第 22 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "JournalNode"; then
+      {{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start journalnode
+    fi
+  when: inventory_hostname in groups['journalnodes']
+  changed_when: false
+
+- name: 等待所有 JournalNode 端口 8485 处于监听状态
+  wait_for:
+    port: "{{ jn_port }}"
+    host: "127.0.0.1"
+    timeout: 30
+  when: inventory_hostname in groups['journalnodes']
+
+# ----------------- 步骤 2: 格式化 ZKFC (在 spark01 执行) -----------------
+- name: 检查 ZKFC 格式化状态锁文件
+  stat:
+    path: /root/.zkfc_formatted
+  register: zkfc_lock
+  when: inventory_hostname == groups['namenode_active'][0]
+
+- name: 格式化 ZKFC (hdfs zkfc -formatZK) (PDF 第 22 页)
+  shell: |
+    source /etc/profile
+    echo "Y" | {{ hadoop_install_dir }}/bin/hdfs zkfc -formatZK
+    touch /root/.zkfc_formatted
+  when:
+    - inventory_hostname == groups['namenode_active'][0]
+    - not zkfc_lock.stat.exists
+
+# ----------------- 步骤 3: 格式化 Active NameNode (在 spark01 执行) -----------------
+- name: 检查 NameNode 格式化状态锁文件
+  stat:
+    path: /root/.namenode_formatted
+  register: nn_lock
+  when: inventory_hostname == groups['namenode_active'][0]
+
+- name: 格式化主 NameNode (hadoop namenode -format) (PDF 第 23 页)
+  shell: |
+    source /etc/profile
+    {{ hadoop_install_dir }}/bin/hadoop namenode -format -force -nonInteractive
+    touch /root/.namenode_formatted
+  when:
+    - inventory_hostname == groups['namenode_active'][0]
+    - not nn_lock.stat.exists
+
+# ----------------- 步骤 4: 启动主 NameNode -----------------
+- name: 启动 spark01 上的主 NameNode (PDF 第 23 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "NameNode"; then
+      {{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start namenode
+    fi
+  when: inventory_hostname == groups['namenode_active'][0]
+  changed_when: false
+
+- name: 等待主 NameNode RPC 端口 9000 就绪
+  wait_for:
+    port: "{{ nn_rpc_port }}"
+    host: "{{ ansible_host }}"
+    timeout: 40
+  when: inventory_hostname == groups['namenode_active'][0]
+
+# ----------------- 步骤 5: Standby NameNode 同步元数据并启动 -----------------
+- name: 检查 Standby NameNode 同步锁文件
+  stat:
+    path: /root/.standby_bootstrapped
+  register: standby_lock
+  when: inventory_hostname == groups['namenode_standby'][0]
+
+- name: 在 spark02 上同步主 NameNode 元数据 (hdfs namenode -bootstrapStandby) (PDF 第 24 页)
+  shell: |
+    source /etc/profile
+    echo "Y" | {{ hadoop_install_dir }}/bin/hdfs namenode -bootstrapStandby
+    touch /root/.standby_bootstrapped
+  when:
+    - inventory_hostname == groups['namenode_standby'][0]
+    - not standby_lock.stat.exists
+
+- name: 启动 spark02 上的 Standby NameNode (PDF 第 24 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "NameNode"; then
+      {{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start namenode
+    fi
+  when: inventory_hostname == groups['namenode_standby'][0]
+  changed_when: false
+
+# ----------------- 步骤 6: 启动 ZKFC 守护进程 -----------------
+- name: 在 NameNode 节点 (spark01, spark02) 上启动 zkfc (PDF 第 25 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "DFSZKFailoverController"; then
+      {{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start zkfc
+    fi
+  when: inventory_hostname in groups['namenodes']
+  changed_when: false
+
+# ----------------- 步骤 7: 启动 DataNode 守护进程 -----------------
+- name: 在 spark04, spark05, spark06 上启动 DataNode (PDF 第 24 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "DataNode"; then
+      {{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start datanode
+    fi
+  when: inventory_hostname in groups['datanodes']
+  changed_when: false
+
+# ----------------- 步骤 8: 启动 YARN 服务 (Active RM & NM) -----------------
+- name: 在 spark01 上拉起主 ResourceManager 与所有从节点 NodeManager (PDF 第 25 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "ResourceManager"; then
+      {{ hadoop_install_dir }}/sbin/start-yarn.sh
+    fi
+  when: inventory_hostname == groups['rm_active'][0]
+  changed_when: false
+
+- name: 在 spark03 上拉起 Standby 备用 ResourceManager (PDF 第 25 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "ResourceManager"; then
+      {{ hadoop_install_dir }}/sbin/yarn-daemon.sh start resourcemanager
+    fi
+  when: inventory_hostname == groups['rm_standby'][0]
+  changed_when: false
+
+# ----------------- 步骤 9: 启动 JobHistoryServer -----------------
+- name: 在 spark01 上启动 MR 历史日志服务 (PDF 第 44 页)
+  shell: |
+    source /etc/profile
+    if ! {{ jdk_install_dir }}/bin/jps | grep -q "JobHistoryServer"; then
+      {{ hadoop_install_dir }}/sbin/mr-jobhistory-daemon.sh start historyserver
+    fi
+  when: inventory_hostname == jobhistory_host
+  changed_when: false

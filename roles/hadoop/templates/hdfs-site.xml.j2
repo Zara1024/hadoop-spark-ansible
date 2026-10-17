@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!-- hdfs-site.xml: 生成自 Ansible 自动化部署模板 (严格对齐 PDF 第 12~14 页) -->
+<configuration>
+    <!-- 执行 hdfs 的 nameservice 为 ns，和 core-site.xml 保持一致 -->
+    <property>
+        <name>dfs.nameservices</name>
+        <value>{{ hadoop_nameservice }}</value>
+    </property>
+
+    <!-- ns 下有两个 namenode，分别是 nn1, nn2 -->
+    <property>
+        <name>dfs.ha.namenodes.{{ hadoop_nameservice }}</name>
+        <value>nn1,nn2</value>
+    </property>
+
+    <!-- nn1 的 RPC 通信地址 -->
+    <property>
+        <name>dfs.namenode.rpc-address.{{ hadoop_nameservice }}.nn1</name>
+        <value>{{ nn1_host }}:{{ nn_rpc_port }}</value>
+    </property>
+
+    <!-- nn1 的 http 通信地址 (Hadoop 2.x 端口为 50070) -->
+    <property>
+        <name>dfs.namenode.http-address.{{ hadoop_nameservice }}.nn1</name>
+        <value>{{ nn1_host }}:{{ nn_http_port }}</value>
+    </property>
+
+    <!-- nn2 的 RPC 通信地址 -->
+    <property>
+        <name>dfs.namenode.rpc-address.{{ hadoop_nameservice }}.nn2</name>
+        <value>{{ nn2_host }}:{{ nn_rpc_port }}</value>
+    </property>
+
+    <!-- nn2 的 http 通信地址 -->
+    <property>
+        <name>dfs.namenode.http-address.{{ hadoop_nameservice }}.nn2</name>
+        <value>{{ nn2_host }}:{{ nn_http_port }}</value>
+    </property>
+
+    <!-- 指定 namenode 元数据在 JournalNode 上的存放位置 (QJM 协议) -->
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://{% for host in groups['journalnodes'] %}{{ host }}:{{ jn_port }}{% if not loop.last %};{% endif %}{% endfor %}/{{ hadoop_nameservice }}</value>
+    </property>
+
+    <!-- 指定 JournalNode 存放数据的位置 -->
+    <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>{{ hadoop_journal_dir }}</value>
+    </property>
+
+    <!-- 开启 NameNode 故障时自动切换 -->
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+    </property>
+
+    <!-- 配置切换的实现方式 -->
+    <property>
+        <name>dfs.client.failover.proxy.provider.{{ hadoop_nameservice }}</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+
+    <!-- 配置隔离机制 (sshfence 防止脑裂) -->
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>sshfence</value>
+    </property>
+
+    <!-- 配置隔离机制的 SSH 登录密钥位置 -->
+    <property>
+        <name>dfs.ha.fencing.ssh.private-key-files</name>
+        <value>/root/.ssh/id_rsa</value>
+    </property>
+
+    <!-- 配置 NameNode 数据存放位置 -->
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file://{{ hadoop_namenode_dir }}</value>
+    </property>
+
+    <!-- 配置 DataNode 数据存放位置 -->
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file://{{ hadoop_datanode_dir }}</value>
+    </property>
+
+    <!-- 配置 block 副本数量 -->
+    <property>
+        <name>dfs.replication</name>
+        <value>{{ hadoop_replication }}</value>
+    </property>
+
+    <!-- 设置 HDFS 操作权限，false 方便实验与测试 -->
+    <property>
+        <name>dfs.permissions</name>
+        <value>{{ hadoop_permissions }}</value>
+    </property>
+</configuration>

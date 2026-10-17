@@ -1,0 +1,65 @@
+---
+# ==============================================================================
+# Java (JDK 8) 角色任务：离线解压与环境初始化 (PDF 第 5 页)
+# ==============================================================================
+
+- name: 检查目标节点 JDK 目录是否已经存在
+  stat:
+    path: "{{ jdk_install_dir }}/bin/java"
+  register: jdk_bin_stat
+
+- name: 检查控制机上 JDK 离线安装包是否存在
+  stat:
+    path: "{{ offline_packages_dir }}/{{ jdk_tarball }}"
+  delegate_to: localhost
+  become: false
+  register: jdk_pkg_stat
+  when: not jdk_bin_stat.stat.exists
+
+- name: 断言离线安装包存在
+  assert:
+    that:
+      - jdk_pkg_stat.stat.exists
+    fail_msg: "未在 {{ offline_packages_dir }} 找到 {{ jdk_tarball }}，请先放入安装包！"
+  when: not jdk_bin_stat.stat.exists
+
+- name: 离线分发并解压 JDK 8 到目标主机
+  unarchive:
+    src: "{{ offline_packages_dir }}/{{ jdk_tarball }}"
+    dest: "{{ software_base_dir }}"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    creates: "{{ jdk_install_dir }}/bin/java"
+  when: not jdk_bin_stat.stat.exists
+
+- name: 配置 Java 环境变量 (/etc/profile.d/java.sh)
+  copy:
+    dest: /etc/profile.d/java.sh
+    mode: '0755'
+    content: |
+      # JDK Environment (Configured by Ansible)
+      export JAVA_HOME={{ jdk_install_dir }}
+      export CLASSPATH=.:${JAVA_HOME}/lib/dt.jar:${JAVA_HOME}/lib/tools.jar
+      export PATH=${PATH}:${JAVA_HOME}/bin
+
+- name: 保证 /etc/profile 中也显式包含 Java 环境变量 (严格对应 PDF 第 5 页)
+  blockinfile:
+    path: /etc/profile
+    marker: "# {mark} ANSIBLE MANAGED JAVA_HOME"
+    block: |
+      export JAVA_HOME={{ jdk_install_dir }}
+      export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+      export PATH=$PATH:$JAVA_HOME/bin
+      export JAVA_HOME PATH CLASSPATH
+
+- name: 创建全局 Java 命令软链接至 /usr/bin
+  file:
+    src: "{{ jdk_install_dir }}/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - java
+    - javac
+    - jps
+    - jar

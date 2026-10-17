@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!-- mapred-site.xml: 生成自 Ansible 自动化部署模板 (严格对齐 PDF 第 14 页与第 44 页) -->
+<configuration>
+    <!-- 指定 MapReduce 框架运行在 YARN 上 -->
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+
+    <!-- 日志监控服务 (JobHistoryServer) 地址配置 (PDF 第 44 页) -->
+    <property>
+        <name>mapreduce.jobhistory.address</name>
+        <value>{{ jobhistory_host }}:{{ jobhistory_address_port }}</value>
+    </property>
+
+    <property>
+        <name>mapreduce.jobhistory.webapp.address</name>
+        <value>{{ jobhistory_host }}:{{ jobhistory_webapp_port }}</value>
+    </property>
+</configuration>

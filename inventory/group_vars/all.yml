@@ -1,0 +1,118 @@
+---
+# ==============================================================================
+# 全局变量配置文件 (group_vars/all.yml)
+# 严格对齐 05 hadoop+spark+zookeeper.pdf 规格要求
+# ==============================================================================
+
+# 基础目录与用户权限
+software_base_dir: "/home/software"
+bigdata_user: "root"
+bigdata_group: "root"
+
+# 离线安装包存放路径 (位于控制机工程根目录下的 packages 目录)
+offline_packages_dir: "{{ playbook_dir }}/../packages"
+
+# ----------------- 软件版本与安装包文件名 -----------------
+jdk_version: "1.8.0_202"
+jdk_tarball: "jdk-8u202-linux-x64.tar.gz"
+jdk_install_dir: "{{ software_base_dir }}/jdk1.8.0_202"
+
+scala_version: "2.11.12"
+scala_tarball: "scala-2.11.12.tgz"
+scala_install_dir: "{{ software_base_dir }}/scala-2.11.12"
+
+zookeeper_version: "3.8.4"
+zookeeper_tarball: "apache-zookeeper-3.8.4-bin.tar.gz"
+zookeeper_install_dir: "/usr/local/apache-zookeeper-3.8.4-bin"
+
+hadoop_version: "2.10.1"
+hadoop_tarball: "hadoop-2.10.1.tar.gz"
+hadoop_install_dir: "{{ software_base_dir }}/hadoop-2.10.1"
+
+spark_version: "2.4.8"
+spark_tarball: "spark-2.4.8-bin-hadoop2.7.tgz"
+spark_install_dir: "{{ software_base_dir }}/spark-2.4.8-bin-hadoop2.7"
+
+# ----------------- ZooKeeper 集群配置 -----------------
+zk_client_port: 2181
+zk_peer_port: 2888
+zk_election_port: 3888
+zk_data_dir: "{{ zookeeper_install_dir }}/data"
+zk_log_dir: "{{ zookeeper_install_dir }}/logs"
+zk_sasl_client: "false"
+
+# ----------------- Hadoop HDFS HA 配置 -----------------
+hadoop_nameservice: "ns"
+hadoop_tmp_dir: "{{ hadoop_install_dir }}/tmp"
+hadoop_journal_dir: "{{ hadoop_install_dir }}/journal"
+hadoop_namenode_dir: "{{ hadoop_tmp_dir }}/namenode"
+hadoop_datanode_dir: "{{ hadoop_tmp_dir }}/datanode"
+hadoop_replication: 3
+hadoop_permissions: "false"
+
+# NameNode HA 规划
+nn1_host: "spark01"
+nn2_host: "spark02"
+nn_rpc_port: 9000
+nn_http_port: 50070
+jn_port: 8485
+
+# ----------------- Hadoop YARN HA 配置 -----------------
+yarn_cluster_id: "yarn-ha"
+rm1_host: "spark01"
+rm2_host: "spark03"
+
+# MapReduce JobHistory 配置
+jobhistory_host: "spark01"
+jobhistory_address_port: 10020
+jobhistory_webapp_port: 19888
+
+# ----------------- 生产级 JVM 堆内存与 GC 规划 -----------------
+# 实验/测试默认值 (适合 2G~4G 虚拟机与轻量测试)
+hadoop_namenode_heapsize: "1000m"
+hadoop_datanode_heapsize: "1000m"
+hadoop_journalnode_heapsize: "512m"
+yarn_rm_heapsize: "1000m"
+yarn_nm_heapsize: "1000m"
+zk_heapsize: "1g"
+
+# 生产级建议配置 (若服务器为 32G/64G/128G 高配生产机，可解除以下注释覆盖)：
+# hadoop_namenode_heapsize: "8192m"    # 支持超千万级元数据与 G1GC
+# hadoop_datanode_heapsize: "4096m"
+# hadoop_journalnode_heapsize: "2048m"
+# yarn_rm_heapsize: "8192m"
+# yarn_nm_heapsize: "4096m"
+# zk_heapsize: "4g"
+
+# ==================== YARN 资源分配 (已针对 2G~4G 实验虚拟机调优) ====================
+# 禁用内存检查，防止虚拟机突发内存占用导致进程被误杀 (PDF 第 46 页)
+yarn_pmem_check_enabled: "false"
+yarn_vmem_check_enabled: "false"
+yarn_vmem_pmem_ratio: 5.2
+
+# 实验环境默认规格 (单机分配 2 核，2GB 内存池，留 1~2G 给操作系统与基础组件)
+yarn_nodemanager_resource_cpu_vcores: 2
+yarn_nodemanager_resource_memory_mb: 2048     # 2GB (以 MB 为单位)
+yarn_scheduler_min_vcores: 1
+yarn_scheduler_max_vcores: 2
+yarn_scheduler_min_mb: 512                   # 最小分配 512MB
+yarn_scheduler_max_mb: 2048                  # 最大分配 2048MB
+
+# 提示：若后续迁移到真实 GPU 高配服务器，可将上方四个数值分别调回 PDF 第 9 节生产值：
+# yarn_nodemanager_resource_cpu_vcores: 24
+# yarn_nodemanager_resource_memory_mb: 24576    # 24GB
+# yarn_scheduler_max_vcores: 24
+# yarn_scheduler_max_mb: 24576
+
+yarn_log_aggregation_enable: "true"
+yarn_log_aggregation_retain_seconds: 106800
+
+# ----------------- Spark on YARN 配置 -----------------
+spark_ui_port: 8040
+spark_history_ui_port: 18080
+spark_hdfs_jars_dir: "/spark_jars"
+spark_event_log_dir: "hdfs:///user/spark/event-log"
+spark_history_fs_log_dir: "hdfs:///user/spark/event-log"
+spark_event_log_compress: "true"
+spark_event_log_max_file_size: "128MB"
+spark_ui_timeline_tasks_max: 100000

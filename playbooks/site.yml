@@ -1,0 +1,20 @@
+---
+# ==============================================================================
+# 全局一键部署主入口剧本 (site.yml)
+# 依次执行系统环境准备、Java/Scala、ZooKeeper、Hadoop HA 与 Spark on YARN
+# ==============================================================================
+
+- name: 阶段 0: 基础设施加固与 hosts 配置
+  import_playbook: 00-system-init.yml
+
+- name: 阶段 1: 部署基础环境 JDK 8 与 Scala 2.11
+  import_playbook: 01-deploy-java-scala.yml
+
+- name: 阶段 2: 部署 ZooKeeper 3.8.4 分布式高可用集群
+  import_playbook: 02-deploy-zookeeper.yml
+
+- name: 阶段 3: 部署 Hadoop 2.10.1 HA 高可用集群 (HDFS + YARN)
+  import_playbook: 03-deploy-hadoop.yml
+
+- name: 阶段 4: 部署 Spark 2.4.8 on YARN 客户端与 History Server
+  import_playbook: 04-deploy-spark.yml

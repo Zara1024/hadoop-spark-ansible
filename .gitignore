@@ -1,0 +1,20 @@
+# Large package archives (prevent breaking GitHub 100MB limit)
+packages/*.tar.gz
+packages/*.tgz
+packages/*.zip
+*.tar.gz
+*.tgz
+*.zip
+
+# Ansible transient files
+*.retry
+.ansible/
+*.log
+
+# Editor & OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

@@ -1,0 +1,60 @@
+---
+# ==============================================================================
+# Spark on YARN HDFS 依赖与 History Server 初始化 (PDF 第 37, 45 页)
+# ==============================================================================
+
+- name: 检查 HDFS 上 Spark 依赖 Jar 与事件目录初始化锁
+  stat:
+    path: /root/.spark_hdfs_initialized
+  register: spark_hdfs_lock
+  when: inventory_hostname == groups['spark_clients'][0]
+
+- name: 等待 HDFS 安全模式结束 (离开 Safemode)
+  shell: |
+    source /etc/profile
+    hdfs dfsadmin -safemode wait
+  when:
+    - inventory_hostname == groups['spark_clients'][0]
+    - not spark_hdfs_lock.stat.exists
+  changed_when: false
+
+- name: 在 HDFS 上创建 /spark_jars 并上传全部 Spark 依赖库 (PDF 第 37 页)
+  shell: |
+    source /etc/profile
+    hdfs dfs -mkdir -p {{ spark_hdfs_jars_dir }}
+    hdfs dfs -put -f {{ spark_install_dir }}/jars/* {{ spark_hdfs_jars_dir }}/
+  when:
+    - inventory_hostname == groups['spark_clients'][0]
+    - not spark_hdfs_lock.stat.exists
+
+- name: 在 HDFS 上创建 Spark 事件日志存储目录 /user/spark/event-log (PDF 第 45 页)
+  shell: |
+    source /etc/profile
+    hdfs dfs -mkdir -p /user/spark/event-log
+    hdfs dfs -chmod -R 777 /user/spark
+    touch /root/.spark_hdfs_initialized
+  when:
+    - inventory_hostname == groups['spark_clients'][0]
+    - not spark_hdfs_lock.stat.exists
+
+- name: 配置 Spark History Server Systemd 服务
+  template:
+    src: ../templates/spark-history-server.service.j2
+    dest: /etc/systemd/system/spark-history-server.service
+    mode: '0644'
+  when: inventory_hostname in groups['spark_history_server']
+  register: spark_hs_systemd
+
+- name: 重载 systemd 服务配置
+  systemd:
+    daemon_reload: true
+  when:
+    - inventory_hostname in groups['spark_history_server']
+    - spark_hs_systemd.changed
+
+- name: 启动并启用 Spark History Server (PDF 第 45 页，端口 18080)
+  systemd:
+    name: spark-history-server
+    state: started
+    enabled: true
+  when: inventory_hostname in groups['spark_history_server']

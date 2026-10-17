@@ -1,0 +1,19 @@
+[Unit]
+Description=Apache ZooKeeper Distributed Coordination Service
+After=network.target remote-fs.target
+
+[Service]
+Type=forking
+User={{ bigdata_user }}
+Group={{ bigdata_group }}
+Environment="JAVA_HOME={{ jdk_install_dir }}"
+Environment="ZOO_LOG_DIR={{ zk_log_dir }}"
+ExecStart={{ zookeeper_install_dir }}/bin/zkServer.sh start
+ExecStop={{ zookeeper_install_dir }}/bin/zkServer.sh stop
+ExecReload={{ zookeeper_install_dir }}/bin/zkServer.sh restart
+Restart=always
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+---
+# ==============================================================================
+# Spark 2.4.8 安装任务：离线分发解压与环境变量注入 (PDF 第 28 页)
+# ==============================================================================
+
+- name: 检查目标节点 Spark 是否已存在
+  stat:
+    path: "{{ spark_install_dir }}/bin/spark-submit"
+  register: spark_bin_stat
+
+- name: 检查控制机上 Spark 离线安装包
+  stat:
+    path: "{{ offline_packages_dir }}/{{ spark_tarball }}"
+  delegate_to: localhost
+  become: false
+  register: spark_pkg_stat
+  when: not spark_bin_stat.stat.exists
+
+- name: 断言 Spark 离线安装包存在
+  assert:
+    that:
+      - spark_pkg_stat.stat.exists
+    fail_msg: "未在 {{ offline_packages_dir }} 找到 {{ spark_tarball }}，请先放入安装包！"
+  when: not spark_bin_stat.stat.exists
+
+- name: 离线分发并解压 Spark 2.4.8 到软件目录
+  unarchive:
+    src: "{{ offline_packages_dir }}/{{ spark_tarball }}"
+    dest: "{{ software_base_dir }}"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    creates: "{{ spark_install_dir }}/bin/spark-submit"
+  when: not spark_bin_stat.stat.exists
+
+- name: 创建 Spark 日志与运行时目录
+  file:
+    path: "{{ spark_install_dir }}/logs"
+    state: directory
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0755'
+
+- name: 配置 Spark 环境变量 (/etc/profile.d/spark.sh)
+  copy:
+    dest: /etc/profile.d/spark.sh
+    mode: '0755'
+    content: |
+      # Spark 2.4.8 Environment (Configured by Ansible)
+      export SPARK_HOME={{ spark_install_dir }}
+      export PATH=${SPARK_HOME}/bin:${SPARK_HOME}/sbin:${PATH}
+
+- name: 写入 /etc/profile 中 Spark 环境变量
+  blockinfile:
+    path: /etc/profile
+    marker: "# {mark} ANSIBLE MANAGED SPARK_HOME"
+    block: |
+      export SPARK_HOME={{ spark_install_dir }}
+      export PATH=$SPARK_HOME/bin:$SPARK_HOME/sbin:$PATH
+      export SPARK_HOME PATH
+
+- name: 清理 /usr/bin 下冲突的 Spark 软链接
+  file:
+    path: "/usr/bin/{{ item }}"
+    state: absent
+  loop:
+    - spark-submit
+    - spark-shell
+    - pyspark

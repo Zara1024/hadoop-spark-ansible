@@ -1,0 +1,22 @@
+# The java implementation to use. (PDF 第 12 页)
+export JAVA_HOME={{ jdk_install_dir }}
+
+# The hadoop configuration directory.
+export HADOOP_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop
+
+# Extra Java runtime options
+export HADOOP_OPTS="-Djava.net.preferIPv4Stack=true $HADOOP_OPTS"
+
+# ==================== 生产级 JVM 堆内存与 GC 参数调优 ====================
+# NameNode 堆内存与 G1GC (保障百万级元数据与极低 STW 延迟)
+export HADOOP_NAMENODE_OPTS="-Xms{{ hadoop_namenode_heapsize | default('1000m') }} -Xmx{{ hadoop_namenode_heapsize | default('1000m') }} -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:InitiatingHeapOccupancyPercent=45 -Dhadoop.security.logger=INFO,RFAS $HADOOP_NAMENODE_OPTS"
+
+# DataNode 堆内存
+export HADOOP_DATANODE_OPTS="-Xms{{ hadoop_datanode_heapsize | default('1000m') }} -Xmx{{ hadoop_datanode_heapsize | default('1000m') }} -XX:+UseG1GC $HADOOP_DATANODE_OPTS"
+
+# JournalNode 堆内存
+export HADOOP_JOURNALNODE_OPTS="-Xms{{ hadoop_journalnode_heapsize | default('512m') }} -Xmx{{ hadoop_journalnode_heapsize | default('512m') }} $HADOOP_JOURNALNODE_OPTS"
+
+# ZKFailoverController 故障检测器
+export HADOOP_ZKFC_OPTS="-Xms256m -Xmx512m $HADOOP_ZKFC_OPTS"
+

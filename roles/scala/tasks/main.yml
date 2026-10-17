@@ -1,0 +1,58 @@
+---
+# ==============================================================================
+# Scala 角色任务：离线解压与环境初始化 (PDF 第 6 页)
+# ==============================================================================
+
+- name: 检查目标节点 Scala 目录是否已经存在
+  stat:
+    path: "{{ scala_install_dir }}/bin/scala"
+  register: scala_bin_stat
+
+- name: 检查控制机上 Scala 离线安装包是否存在
+  stat:
+    path: "{{ offline_packages_dir }}/{{ scala_tarball }}"
+  delegate_to: localhost
+  become: false
+  register: scala_pkg_stat
+  when: not scala_bin_stat.stat.exists
+
+- name: 断言 Scala 安装包存在
+  assert:
+    that:
+      - scala_pkg_stat.stat.exists
+    fail_msg: "未在 {{ offline_packages_dir }} 找到 {{ scala_tarball }}，请先放入安装包！"
+  when: not scala_bin_stat.stat.exists
+
+- name: 离线分发并解压 Scala 到目标主机
+  unarchive:
+    src: "{{ offline_packages_dir }}/{{ scala_tarball }}"
+    dest: "{{ software_base_dir }}"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    creates: "{{ scala_install_dir }}/bin/scala"
+  when: not scala_bin_stat.stat.exists
+
+- name: 配置 Scala 环境变量 (/etc/profile.d/scala.sh)
+  copy:
+    dest: /etc/profile.d/scala.sh
+    mode: '0755'
+    content: |
+      # Scala Environment (Configured by Ansible)
+      export SCALA_HOME={{ scala_install_dir }}
+      export PATH=${PATH}:${SCALA_HOME}/bin
+
+- name: 保证 /etc/profile 中也显式包含 Scala 环境变量 (严格对应 PDF 第 6 页)
+  blockinfile:
+    path: /etc/profile
+    marker: "# {mark} ANSIBLE MANAGED SCALA_HOME"
+    block: |
+      export SCALA_HOME={{ scala_install_dir }}
+      export PATH=$PATH:$SCALA_HOME/bin
+      export PATH
+
+- name: 创建全局 Scala 命令软链接至 /usr/bin
+  file:
+    src: "{{ scala_install_dir }}/bin/scala"
+    dest: "/usr/bin/scala"
+    state: link
+    force: true

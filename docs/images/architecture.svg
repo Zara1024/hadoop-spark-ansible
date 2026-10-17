@@ -1,0 +1,357 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 820" width="100%" height="100%">
+  <defs>
+    <!-- 阴影滤镜 -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <filter id="subtle-shadow" x="-3%" y="-3%" width="106%" height="106%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.05" />
+    </filter>
+
+    <!-- 渐变色定义 -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="activeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="standbyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="zkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="qjmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="workerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- 箭头标记 -->
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#6366f1" />
+    </marker>
+    <marker id="arrow-slate" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #0f172a; }
+    .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 13px; font-weight: 400; fill: #64748b; }
+    .group-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; font-weight: 700; }
+    .card-ip { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 11px; font-weight: 600; }
+    .item-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 12px; fill: #334155; }
+    .item-badge { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-size: 11px; font-weight: 600; }
+    .flow-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 11px; font-weight: 600; }
+  </style>
+
+  <!-- 画布背景 -->
+  <rect width="1140" height="820" rx="16" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+
+  <!-- 顶部主标题区域 -->
+  <g transform="translate(40, 24)">
+    <text x="0" y="24" class="title">Hadoop HA + ZooKeeper + Spark on YARN 企业级集群拓扑架构图</text>
+    <text x="0" y="46" class="subtitle">标准 6 节点奇数仲裁规划 · 双 NameNode HA · 双 ResourceManager HA · QJM 日志共享 · 全自动 Ansible 编排</text>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- 1. 顶部 ZooKeeper 集群区域 (spark01, spark02, spark03) -->
+  <!-- ==================================================================== -->
+  <g transform="translate(40, 85)">
+    <!-- 外框卡片 -->
+    <rect width="1060" height="110" rx="12" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5" filter="url(#subtle-shadow)" />
+    <!-- 区域标签 -->
+    <rect x="20" y="-12" width="290" height="24" rx="12" fill="url(#zkGrad)" />
+    <text x="165" y="4" text-anchor="middle" fill="#ffffff" class="group-label">ZooKeeper 协调选举层 (3 节点分布式仲裁)</text>
+
+    <!-- ZK-1: spark01 -->
+    <g transform="translate(25, 24)">
+      <rect width="320" height="66" rx="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="1.2" filter="url(#subtle-shadow)" />
+      <circle cx="20" cy="24" r="6" fill="#10b981" />
+      <text x="36" y="28" class="card-title" fill="#4338ca">spark01</text>
+      <text x="100" y="27" class="card-ip" fill="#6b7280">(192.168.71.111)</text>
+      <text x="36" y="48" class="item-text">QuorumPeer · <tspan font-weight="700" fill="#4338ca">myid = 1</tspan> · Port 2181/2888/3888</text>
+    </g>
+
+    <!-- ZK-2: spark02 -->
+    <g transform="translate(370, 24)">
+      <rect width="320" height="66" rx="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="1.2" filter="url(#subtle-shadow)" />
+      <circle cx="20" cy="24" r="6" fill="#10b981" />
+      <text x="36" y="28" class="card-title" fill="#4338ca">spark02</text>
+      <text x="100" y="27" class="card-ip" fill="#6b7280">(192.168.71.112)</text>
+      <text x="36" y="48" class="item-text">QuorumPeer · <tspan font-weight="700" fill="#4338ca">myid = 2</tspan> · Port 2181/2888/3888</text>
+    </g>
+
+    <!-- ZK-3: spark03 -->
+    <g transform="translate(715, 24)">
+      <rect width="320" height="66" rx="8" fill="#ffffff" stroke="#ddd6fe" stroke-width="1.2" filter="url(#subtle-shadow)" />
+      <circle cx="20" cy="24" r="6" fill="#10b981" />
+      <text x="36" y="28" class="card-title" fill="#4338ca">spark03</text>
+      <text x="100" y="27" class="card-ip" fill="#6b7280">(192.168.71.113)</text>
+      <text x="36" y="48" class="item-text">QuorumPeer · <tspan font-weight="700" fill="#4338ca">myid = 3</tspan> · Port 2181/2888/3888</text>
+    </g>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- 2. 中间管理主节点 HA 层 -->
+  <!-- ==================================================================== -->
+
+  <!-- 左侧：Active 主管理节点 spark01 -->
+  <g transform="translate(40, 225)">
+    <rect width="360" height="235" rx="12" fill="#ffffff" stroke="#a7f3d0" stroke-width="2" filter="url(#shadow)" />
+    <!-- 顶部状态栏 -->
+    <path d="M 0 12 Q 0 0 12 0 L 348 0 Q 360 0 360 12 L 360 38 L 0 38 Z" fill="url(#activeGrad)" />
+    <text x="180" y="24" text-anchor="middle" fill="#ffffff" class="group-label">Active 主管理节点 (spark01 · 192.168.71.111)</text>
+
+    <!-- 组件卡片内容 -->
+    <g transform="translate(20, 52)">
+      <!-- NameNode Active -->
+      <rect width="320" height="38" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1" />
+      <text x="14" y="24" class="card-title" fill="#065f46">NameNode (Active 主节点)</text>
+      <rect x="225" y="10" width="82" height="18" rx="4" fill="#059669" />
+      <text x="266" y="23" text-anchor="middle" fill="#ffffff" class="item-badge">Web: 50070</text>
+
+      <!-- ZKFC -->
+      <g transform="translate(0, 44)">
+        <rect width="320" height="32" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1" />
+        <text x="14" y="21" class="item-text" font-weight="600" fill="#15803d">ZKFC (故障监听与选主仲裁守护进程)</text>
+      </g>
+
+      <!-- ResourceManager Active -->
+      <g transform="translate(0, 82)">
+        <rect width="320" height="38" rx="6" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1" />
+        <text x="14" y="24" class="card-title" fill="#065f46">ResourceManager (Active)</text>
+        <rect x="225" y="10" width="82" height="18" rx="4" fill="#059669" />
+        <text x="266" y="23" text-anchor="middle" fill="#ffffff" class="item-badge">Web: 8088</text>
+      </g>
+
+      <!-- JobHistoryServer -->
+      <g transform="translate(0, 126)">
+        <rect width="320" height="32" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="14" y="21" class="item-text" fill="#475569">JobHistoryServer (MR 任务历史日志)</text>
+        <rect x="225" y="7" width="82" height="18" rx="4" fill="#64748b" />
+        <text x="266" y="20" text-anchor="middle" fill="#ffffff" class="item-badge">Web: 19888</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- 中间：QJM (Quorum Journal Manager) 共享通道 -->
+  <g transform="translate(425, 235)">
+    <rect width="290" height="215" rx="12" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5" filter="url(#subtle-shadow)" />
+    <!-- 标头 -->
+    <rect x="15" y="-12" width="260" height="24" rx="12" fill="url(#qjmGrad)" />
+    <text x="145" y="4" text-anchor="middle" fill="#ffffff" class="group-label">QJM 元数据日志共享通道 (3 节点)</text>
+
+    <g transform="translate(18, 26)">
+      <text x="0" y="18" class="item-text" font-weight="700" fill="#92400e">JournalNode 仲裁服务集群 (Port 8485):</text>
+
+      <rect x="0" y="28" width="254" height="28" rx="4" fill="#ffffff" stroke="#fde68a" />
+      <circle cx="16" cy="42" r="4" fill="#f59e0b" />
+      <text x="28" y="46" class="item-text" font-weight="600" fill="#78350f">spark04 (192.168.71.114)</text>
+
+      <rect x="0" y="62" width="254" height="28" rx="4" fill="#ffffff" stroke="#fde68a" />
+      <circle cx="16" cy="76" r="4" fill="#f59e0b" />
+      <text x="28" y="80" class="item-text" font-weight="600" fill="#78350f">spark05 (192.168.71.115)</text>
+
+      <rect x="0" y="96" width="254" height="28" rx="4" fill="#ffffff" stroke="#fde68a" />
+      <circle cx="16" cy="110" r="4" fill="#f59e0b" />
+      <text x="28" y="114" class="item-text" font-weight="600" fill="#78350f">spark06 (192.168.71.116)</text>
+
+      <text x="127" y="148" text-anchor="middle" class="item-text" font-size="11" fill="#b45309">
+        • 多数派机制：至少 2 节点写入确认即成功
+      </text>
+      <text x="127" y="166" text-anchor="middle" class="item-text" font-size="11" fill="#b45309">
+        • 彻底杜绝单点故障与脑裂 (Split-Brain)
+      </text>
+    </g>
+  </g>
+
+  <!-- 右侧：Standby 热备管理节点 (spark02 & spark03) -->
+  <g transform="translate(740, 225)">
+    <rect width="360" height="235" rx="12" fill="#ffffff" stroke="#bfdbfe" stroke-width="2" filter="url(#shadow)" />
+    <!-- 顶部状态栏 -->
+    <path d="M 0 12 Q 0 0 12 0 L 348 0 Q 360 0 360 12 L 360 38 L 0 38 Z" fill="url(#standbyGrad)" />
+    <text x="180" y="24" text-anchor="middle" fill="#ffffff" class="group-label">Standby 热备节点 (spark02 &amp; spark03)</text>
+
+    <!-- 组件卡片内容 -->
+    <g transform="translate(20, 52)">
+      <!-- NameNode Standby (spark02) -->
+      <rect width="320" height="42" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+      <text x="14" y="20" class="card-title" fill="#1e40af">spark02: NameNode (Standby 热备)</text>
+      <text x="14" y="35" class="item-text" font-size="11" fill="#3b82f6">• 同步 QJM 日志 · 周期合并 FsImage · Web: 50070</text>
+
+      <!-- ZKFC (spark02) -->
+      <g transform="translate(0, 48)">
+        <rect width="320" height="32" rx="6" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1" />
+        <text x="14" y="21" class="item-text" font-weight="600" fill="#0284c7">spark02: ZKFC (心跳监听，主挂自动切换)</text>
+      </g>
+
+      <!-- ResourceManager Standby (spark03) -->
+      <g transform="translate(0, 86)">
+        <rect width="320" height="42" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1" />
+        <text x="14" y="20" class="card-title" fill="#1e40af">spark03: ResourceManager (Standby 热备)</text>
+        <text x="14" y="35" class="item-text" font-size="11" fill="#3b82f6">• ZK 选主锁待命 · 访问自动跳转 Active · Web: 8088</text>
+      </g>
+
+      <!-- 高可用保障标签 -->
+      <g transform="translate(0, 134)">
+        <rect width="320" height="24" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
+        <text x="160" y="16" text-anchor="middle" class="item-text" font-size="11" font-weight="600" fill="#64748b">
+          免人工干预 · 秒级自动化透明故障倒换 (HA Failover)
+        </text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- 3. 数据同步与状态箭头 (连接线) -->
+  <!-- ==================================================================== -->
+  <!-- ZK 到 spark01 ZKFC / RM -->
+  <path d="M 200 195 L 200 220" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" marker-end="url(#arrow-purple)" />
+  <text x="210" y="212" class="flow-label" fill="#6366f1">心跳 / 选主锁</text>
+
+  <!-- ZK 到 spark02 ZKFC -->
+  <path d="M 530 195 L 530 215 L 880 215 L 880 220" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" marker-end="url(#arrow-purple)" />
+
+  <!-- Active NN 到 QJM (写入 EditLog) -->
+  <path d="M 400 280 L 420 280" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)" />
+  <text x="375" y="274" class="flow-label" fill="#059669">写入 EditLog</text>
+
+  <!-- QJM 到 Standby NN (读取同步 EditLog) -->
+  <path d="M 715 280 L 735 280" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arrow-blue)" />
+  <text x="700" y="274" class="flow-label" fill="#2563eb">读取同步</text>
+
+  <!-- ==================================================================== -->
+  <!-- 4. 底部计算与存储工作节点 (Workers / Slaves) -->
+  <!-- ==================================================================== -->
+  <g transform="translate(40, 500)">
+    <!-- 容器卡片 -->
+    <rect width="1060" height="280" rx="12" fill="#ffffff" stroke="#bae6fd" stroke-width="1.8" filter="url(#shadow)" />
+    <!-- 标头 -->
+    <path d="M 0 12 Q 0 0 12 0 L 1048 0 Q 1060 0 1060 12 L 1060 38 L 0 38 Z" fill="url(#workerGrad)" />
+    <text x="530" y="24" text-anchor="middle" fill="#ffffff" class="group-label">计算与存储工作节点集群 (Workers / Slaves · 计算存储同构扩展)</text>
+
+    <!-- Worker 1: spark04 -->
+    <g transform="translate(25, 52)">
+      <rect width="320" height="210" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+      <rect x="0" y="0" width="320" height="36" rx="8" fill="#f1f5f9" />
+      <text x="14" y="23" class="card-title" fill="#0f172a">spark04 (GPU 计算节点 1)</text>
+      <text x="215" y="23" class="card-ip" fill="#64748b">192.168.71.114</text>
+
+      <g transform="translate(14, 48)">
+        <circle cx="6" cy="12" r="4" fill="#0ea5e9" />
+        <text x="18" y="16" class="item-text" font-weight="600">DataNode</text>
+        <text x="120" y="16" class="item-text" fill="#64748b">HDFS Block 本地存储</text>
+
+        <circle cx="6" cy="42" r="4" fill="#0ea5e9" />
+        <text x="18" y="46" class="item-text" font-weight="600">NodeManager</text>
+        <text x="120" y="46" class="item-text" fill="#64748b">YARN Container 运算容器</text>
+
+        <circle cx="6" cy="72" r="4" fill="#f59e0b" />
+        <text x="18" y="76" class="item-text" font-weight="600" fill="#b45309">JournalNode</text>
+        <text x="120" y="76" class="item-text" fill="#64748b">QJM 共享编辑日志节点</text>
+
+        <circle cx="6" cy="102" r="4" fill="#8b5cf6" />
+        <text x="18" y="106" class="item-text" font-weight="600" fill="#6d28d9">Spark Client</text>
+        <text x="120" y="106" class="item-text" fill="#64748b">spark-submit 任务提交环境</text>
+
+        <rect x="0" y="124" width="292" height="24" rx="4" fill="#ecfdf5" stroke="#a7f3d0" />
+        <text x="146" y="140" text-anchor="middle" class="item-text" font-size="11" font-weight="600" fill="#065f46">
+          GPU 节点组 · 承载大规模分布式并行训练
+        </text>
+      </g>
+    </g>
+
+    <!-- Worker 2: spark05 -->
+    <g transform="translate(370, 52)">
+      <rect width="320" height="210" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+      <rect x="0" y="0" width="320" height="36" rx="8" fill="#f1f5f9" />
+      <text x="14" y="23" class="card-title" fill="#0f172a">spark05 (GPU 计算节点 2)</text>
+      <text x="215" y="23" class="card-ip" fill="#64748b">192.168.71.115</text>
+
+      <g transform="translate(14, 48)">
+        <circle cx="6" cy="12" r="4" fill="#0ea5e9" />
+        <text x="18" y="16" class="item-text" font-weight="600">DataNode</text>
+        <text x="120" y="16" class="item-text" fill="#64748b">HDFS Block 本地存储</text>
+
+        <circle cx="6" cy="42" r="4" fill="#0ea5e9" />
+        <text x="18" y="46" class="item-text" font-weight="600">NodeManager</text>
+        <text x="120" y="46" class="item-text" fill="#64748b">YARN Container 运算容器</text>
+
+        <circle cx="6" cy="72" r="4" fill="#f59e0b" />
+        <text x="18" y="76" class="item-text" font-weight="600" fill="#b45309">JournalNode</text>
+        <text x="120" y="76" class="item-text" fill="#64748b">QJM 共享编辑日志节点</text>
+
+        <circle cx="6" cy="102" r="4" fill="#8b5cf6" />
+        <text x="18" y="106" class="item-text" font-weight="600" fill="#6d28d9">Spark Client</text>
+        <text x="120" y="106" class="item-text" fill="#64748b">spark-submit 任务提交环境</text>
+
+        <rect x="0" y="124" width="292" height="24" rx="4" fill="#ecfdf5" stroke="#a7f3d0" />
+        <text x="146" y="140" text-anchor="middle" class="item-text" font-size="11" font-weight="600" fill="#065f46">
+          GPU 节点组 · 承载大规模分布式并行训练
+        </text>
+      </g>
+    </g>
+
+    <!-- Worker 3: spark06 -->
+    <g transform="translate(715, 52)">
+      <rect width="320" height="210" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+      <rect x="0" y="0" width="320" height="36" rx="8" fill="#f1f5f9" />
+      <text x="14" y="23" class="card-title" fill="#0f172a">spark06 (通用与历史监控)</text>
+      <text x="215" y="23" class="card-ip" fill="#64748b">192.168.71.116</text>
+
+      <g transform="translate(14, 48)">
+        <circle cx="6" cy="12" r="4" fill="#0ea5e9" />
+        <text x="18" y="16" class="item-text" font-weight="600">DataNode</text>
+        <text x="120" y="16" class="item-text" fill="#64748b">HDFS Block 本地存储</text>
+
+        <circle cx="6" cy="42" r="4" fill="#0ea5e9" />
+        <text x="18" y="46" class="item-text" font-weight="600">NodeManager</text>
+        <text x="120" y="46" class="item-text" fill="#64748b">YARN Container 运算容器</text>
+
+        <circle cx="6" cy="72" r="4" fill="#f59e0b" />
+        <text x="18" y="76" class="item-text" font-weight="600" fill="#b45309">JournalNode</text>
+        <text x="120" y="76" class="item-text" fill="#64748b">QJM 共享编辑日志节点</text>
+
+        <circle cx="6" cy="102" r="4" fill="#8b5cf6" />
+        <text x="18" y="106" class="item-text" font-weight="600" fill="#6d28d9">Spark Client</text>
+        <text x="120" y="106" class="item-text" fill="#64748b">spark-submit 任务提交环境</text>
+
+        <!-- Spark History Server 专属 -->
+        <rect x="0" y="124" width="292" height="24" rx="4" fill="#fef2f2" stroke="#fecaca" />
+        <text x="146" y="140" text-anchor="middle" class="item-text" font-size="11" font-weight="700" fill="#b91c1c">
+          Spark History Server · Web: 18080 (历史日志)
+        </text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================================================================== -->
+  <!-- 5. 跨层交互箭头 (Master 到 Workers) -->
+  <!-- ==================================================================== -->
+  <!-- Active RM / NN 下发调度 -->
+  <path d="M 220 460 L 220 495" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)" />
+  <text x="230" y="482" class="flow-label" fill="#059669">YARN 资源调度 / HDFS 读写指令</text>
+
+  <!-- Workers 到 Standby / 共享 (心跳汇报) -->
+  <path d="M 880 495 L 880 465" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow-blue)" />
+  <text x="890" y="482" class="flow-label" fill="#2563eb">DataNode / NM 心跳与块汇报</text>
+</svg>

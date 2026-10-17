@@ -1,0 +1,16 @@
+---
+# ==============================================================================
+# Playbook 01: 离线分发并部署 JDK 8 与 Scala 环境 (PDF 第 5~6 页)
+# ==============================================================================
+
+- name: 在集群全体节点上部署 Oracle JDK 8
+  hosts: all_nodes
+  gather_facts: false
+  roles:
+    - java
+
+- name: 在 Spark 计算与客户端节点上部署 Scala 2.11
+  hosts: spark_clients
+  gather_facts: false
+  roles:
+    - scala

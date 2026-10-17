@@ -1,0 +1,113 @@
+---
+# ==============================================================================
+# ZooKeeper 角色任务：离线部署、配置、myid注入与集群拉起 (PDF 第 7~10 页)
+# ==============================================================================
+
+- name: 检查目标节点 ZooKeeper 是否已存在
+  stat:
+    path: "{{ zookeeper_install_dir }}/bin/zkServer.sh"
+  register: zk_bin_stat
+
+- name: 检查控制机上 ZooKeeper 离线安装包
+  stat:
+    path: "{{ offline_packages_dir }}/{{ zookeeper_tarball }}"
+  delegate_to: localhost
+  become: false
+  register: zk_pkg_stat
+  when: not zk_bin_stat.stat.exists
+
+- name: 断言 ZooKeeper 安装包存在
+  assert:
+    that:
+      - zk_pkg_stat.stat.exists
+    fail_msg: "未在 {{ offline_packages_dir }} 找到 {{ zookeeper_tarball }}，请先放入安装包！"
+  when: not zk_bin_stat.stat.exists
+
+- name: 离线分发并解压 ZooKeeper 到 /usr/local
+  unarchive:
+    src: "{{ offline_packages_dir }}/{{ zookeeper_tarball }}"
+    dest: "/usr/local"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    creates: "{{ zookeeper_install_dir }}/bin/zkServer.sh"
+  when: not zk_bin_stat.stat.exists
+
+- name: 创建 ZooKeeper 数据与日志目录 (PDF 第 9 页)
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0755'
+  loop:
+    - "{{ zk_data_dir }}"
+    - "{{ zk_log_dir }}"
+
+- name: 渲染并生成 zoo.cfg 配置文件 (PDF 第 8 页)
+  template:
+    src: zoo.cfg.j2
+    dest: "{{ zookeeper_install_dir }}/conf/zoo.cfg"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 自动写入本节点的 myid 文件 (PDF 第 9 页)
+  copy:
+    dest: "{{ zk_data_dir }}/myid"
+    content: "{{ myid }}\n"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 配置 ZooKeeper 环境变量 (/etc/profile.d/zookeeper.sh)
+  copy:
+    dest: /etc/profile.d/zookeeper.sh
+    mode: '0755'
+    content: |
+      # ZooKeeper Environment (Configured by Ansible)
+      export ZK_HOME={{ zookeeper_install_dir }}
+      export PATH=${PATH}:${ZK_HOME}/bin
+
+- name: 写入 /etc/profile 中 ZooKeeper 环境变量 (PDF 第 8 页)
+  blockinfile:
+    path: /etc/profile
+    marker: "# {mark} ANSIBLE MANAGED ZK_HOME"
+    block: |
+      export ZK_HOME={{ zookeeper_install_dir }}
+      export PATH=$PATH:$ZK_HOME/bin
+      export PATH
+
+- name: 创建全局 zkServer.sh 与 zkCli.sh 软链接至 /usr/bin
+  file:
+    src: "{{ zookeeper_install_dir }}/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - zkServer.sh
+    - zkCli.sh
+    - zkEnv.sh
+
+- name: 配置 ZooKeeper Systemd 服务
+  template:
+    src: zookeeper.service.j2
+    dest: /etc/systemd/system/zookeeper.service
+    mode: '0644'
+  register: zk_systemd_conf
+
+- name: 重载 systemd 配置
+  systemd:
+    daemon_reload: true
+  when: zk_systemd_conf.changed
+
+- name: 启动并启用 ZooKeeper 集群服务
+  systemd:
+    name: zookeeper
+    state: started
+    enabled: true
+
+- name: 等待 ZooKeeper 客户端端口 2181 就绪
+  wait_for:
+    port: "{{ zk_client_port }}"
+    host: "127.0.0.1"
+    timeout: 30

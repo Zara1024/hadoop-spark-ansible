@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!-- yarn-site.xml: 生成自 Ansible 自动化部署模板 (严格对齐 PDF 第 15~20 页及第 46~47 页调优) -->
+<configuration>
+    <!-- 开启 YARN HA 高可用 -->
+    <property>
+        <name>yarn.resourcemanager.ha.enabled</name>
+        <value>true</value>
+    </property>
+
+    <!-- 指定两个 ResourceManager 的名称标识 -->
+    <property>
+        <name>yarn.resourcemanager.ha.rm-ids</name>
+        <value>rm1,rm2</value>
+    </property>
+
+    <!-- 指定 rm1, rm2 的主机名 (PDF 第 15 页) -->
+    <property>
+        <name>yarn.resourcemanager.hostname.rm1</name>
+        <value>{{ rm1_host }}</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.hostname.rm2</name>
+        <value>{{ rm2_host }}</value>
+    </property>
+
+    <!-- 开启 YARN 恢复机制并使用 ZooKeeper 状态存储 -->
+    <property>
+        <name>yarn.resourcemanager.recovery.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.store.class</name>
+        <value>org.apache.hadoop.yarn.server.resourcemanager.recovery.ZKRMStateStore</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.zk-address</name>
+        <value>{% for host in groups['zookeepers'] %}{{ host }}:{{ zk_client_port }}{% if not loop.last %},{% endif %}{% endfor %}</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.cluster-id</name>
+        <value>{{ yarn_cluster_id }}</value>
+    </property>
+
+    <!-- rm1 各端口服务绑定 -->
+    <property>
+        <name>yarn.resourcemanager.address.rm1</name>
+        <value>{{ rm1_host }}:8032</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address.rm1</name>
+        <value>{{ rm1_host }}:8030</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.webapp.address.rm1</name>
+        <value>{{ rm1_host }}:8088</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address.rm1</name>
+        <value>{{ rm1_host }}:8031</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.admin.address.rm1</name>
+        <value>{{ rm1_host }}:8033</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.ha.admin.address.rm1</name>
+        <value>{{ rm1_host }}:23142</value>
+    </property>
+
+    <!-- rm2 各端口服务绑定 -->
+    <property>
+        <name>yarn.resourcemanager.address.rm2</name>
+        <value>{{ rm2_host }}:8032</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address.rm2</name>
+        <value>{{ rm2_host }}:8030</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.webapp.address.rm2</name>
+        <value>{{ rm2_host }}:8088</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address.rm2</name>
+        <value>{{ rm2_host }}:8031</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.admin.address.rm2</name>
+        <value>{{ rm2_host }}:8033</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.ha.admin.address.rm2</name>
+        <value>{{ rm2_host }}:23142</value>
+    </property>
+
+    <!-- NodeManager 辅助 Shuffle 服务 -->
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+    </property>
+
+    <!-- 日志聚合功能配置 (PDF 第 44 页) -->
+    <property>
+        <name>yarn.log-aggregation-enable</name>
+        <value>{{ yarn_log_aggregation_enable }}</value>
+    </property>
+    <property>
+        <name>yarn.log-aggregation.retain-seconds</name>
+        <value>{{ yarn_log_aggregation_retain_seconds }}</value>
+    </property>
+
+    <!-- ==================== PDF 第 9 节 (第 46~47 页) 性能与资源调优 ==================== -->
+    <!-- 禁用 NodeManager 的物理与虚拟内存检查，防止进程被误杀 -->
+    <property>
+        <name>yarn.nodemanager.pmem-check-enabled</name>
+        <value>{{ yarn_pmem_check_enabled }}</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.vmem-check-enabled</name>
+        <value>{{ yarn_vmem_check_enabled }}</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.vmem-pmem-ratio</name>
+        <value>{{ yarn_vmem_pmem_ratio }}</value>
+    </property>
+
+    <!-- NodeManager 资源分配：24 核心，24 GB 内存 -->
+    <property>
+        <name>yarn.nodemanager.resource.cpu-vcores</name>
+        <value>{{ yarn_nodemanager_resource_cpu_vcores }}</value>
+    </property>
+    <property>
+        <name>yarn.nodemanager.resource.memory-mb</name>
+        <value>{{ yarn_nodemanager_resource_memory_mb }}</value>
+    </property>
+
+    <!-- 调度器容器分配限制：最小 1 核 1GB，最大 24 核 24GB -->
+    <property>
+        <name>yarn.scheduler.minimum-allocation-vcores</name>
+        <value>{{ yarn_scheduler_min_vcores }}</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maximum-allocation-vcores</name>
+        <value>{{ yarn_scheduler_max_vcores }}</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.minimum-allocation-mb</name>
+        <value>{{ yarn_scheduler_min_mb }}</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maximum-allocation-mb</name>
+        <value>{{ yarn_scheduler_max_mb }}</value>
+    </property>
+</configuration>

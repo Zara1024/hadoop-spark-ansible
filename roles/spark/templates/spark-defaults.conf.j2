@@ -1,0 +1,16 @@
+# spark-defaults.conf: 生成自 Ansible 自动化部署模板 (严格对齐 PDF 第 28, 37, 45 页)
+
+# 基础端口
+spark.ui.port {{ spark_ui_port }}
+
+# 缓存 Spark 依赖 jar 包至 HDFS，无需每次任务重复分发上传 (PDF 第 37 页)
+spark.yarn.jars hdfs://{{ hadoop_nameservice }}{{ spark_hdfs_jars_dir }}/*
+
+# 事件日志收集与监控 (PDF 第 45 页)
+spark.eventLog.enabled {{ spark_event_log_enabled | default('true') }}
+spark.eventLog.dir {{ spark_event_log_dir }}
+spark.history.fs.logDirectory {{ spark_history_fs_log_dir }}
+spark.eventLog.compress {{ spark_event_log_compress }}
+spark.eventLog.maxFileSize {{ spark_event_log_max_file_size }}
+spark.ui.timeline.tasks.maximum {{ spark_ui_timeline_tasks_max }}
+spark.history.ui.port {{ spark_history_ui_port }}

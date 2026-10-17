@@ -1,0 +1,77 @@
+---
+# ==============================================================================
+# Hadoop 2.10.1 安装任务：离线分发解压与环境初始化 (PDF 第 11~12 页, 第 21 页)
+# ==============================================================================
+
+- name: 检查目标节点 Hadoop 是否已存在
+  stat:
+    path: "{{ hadoop_install_dir }}/bin/hadoop"
+  register: hadoop_bin_stat
+
+- name: 检查控制机上 Hadoop 离线安装包
+  stat:
+    path: "{{ offline_packages_dir }}/{{ hadoop_tarball }}"
+  delegate_to: localhost
+  become: false
+  register: hadoop_pkg_stat
+  when: not hadoop_bin_stat.stat.exists
+
+- name: 断言 Hadoop 离线安装包存在
+  assert:
+    that:
+      - hadoop_pkg_stat.stat.exists
+    fail_msg: "未在 {{ offline_packages_dir }} 找到 {{ hadoop_tarball }}，请先放入安装包！"
+  when: not hadoop_bin_stat.stat.exists
+
+- name: 离线分发并解压 Hadoop 2.10.1 到软件目录
+  unarchive:
+    src: "{{ offline_packages_dir }}/{{ hadoop_tarball }}"
+    dest: "{{ software_base_dir }}"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    creates: "{{ hadoop_install_dir }}/bin/hadoop"
+  when: not hadoop_bin_stat.stat.exists
+
+- name: 创建 Hadoop 核心运行时目录 (PDF 第 21 页)
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0755'
+  loop:
+    - "{{ hadoop_journal_dir }}"
+    - "{{ hadoop_tmp_dir }}"
+    - "{{ hadoop_namenode_dir }}"
+    - "{{ hadoop_datanode_dir }}"
+    - "{{ hadoop_install_dir }}/logs"
+
+- name: 配置 Hadoop 环境变量 (/etc/profile.d/hadoop.sh)
+  copy:
+    dest: /etc/profile.d/hadoop.sh
+    mode: '0755'
+    content: |
+      # Hadoop 2.10.1 Environment (Configured by Ansible)
+      export HADOOP_HOME={{ hadoop_install_dir }}
+      export HADOOP_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop
+      export PATH=${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin:${PATH}
+
+- name: 写入 /etc/profile 中 Hadoop 环境变量 (PDF 第 11 页)
+  blockinfile:
+    path: /etc/profile
+    marker: "# {mark} ANSIBLE MANAGED HADOOP_HOME"
+    block: |
+      export HADOOP_HOME={{ hadoop_install_dir }}
+      export HADOOP_CONF_DIR={{ hadoop_install_dir }}/etc/hadoop
+      export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
+      export HADOOP_HOME PATH HADOOP_CONF_DIR
+
+- name: 清理 /usr/bin 下冲突的 Hadoop 软链接
+  file:
+    path: "/usr/bin/{{ item }}"
+    state: absent
+  loop:
+    - hadoop
+    - hdfs
+    - yarn
+    - mapred

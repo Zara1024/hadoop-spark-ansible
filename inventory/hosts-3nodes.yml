@@ -1,0 +1,98 @@
+---
+# ==============================================================================
+# Hadoop + Spark + ZooKeeper 3 节点高可用主机清单 (inventory/hosts-3nodes.yml)
+# 采用标准 YAML 格式定义 (混部模式，适合轻量环境)
+# ==============================================================================
+
+all:
+  children:
+    all_nodes:
+      hosts:
+        spark01:
+          ansible_host: 192.168.71.111
+          myid: 1
+          nn_id: nn1
+          rm_id: rm1
+        spark02:
+          ansible_host: 192.168.71.112
+          myid: 2
+          nn_id: nn2
+          rm_id: rm2
+        spark03:
+          ansible_host: 192.168.71.113
+          myid: 3
+
+    zookeepers:
+      hosts:
+        spark01:
+        spark02:
+        spark03:
+
+    namenode_active:
+      hosts:
+        spark01:
+
+    namenode_standby:
+      hosts:
+        spark02:
+
+    namenodes:
+      children:
+        namenode_active:
+        namenode_standby:
+
+    zkfc:
+      children:
+        namenodes:
+
+    journalnodes:
+      hosts:
+        spark01:
+        spark02:
+        spark03:
+
+    datanodes:
+      hosts:
+        spark01:
+        spark02:
+        spark03:
+
+    rm_active:
+      hosts:
+        spark01:
+
+    rm_standby:
+      hosts:
+        spark02:
+
+    resourcemanagers:
+      children:
+        rm_active:
+        rm_standby:
+
+    nodemanagers:
+      hosts:
+        spark01:
+        spark02:
+        spark03:
+
+    slaves:
+      children:
+        datanodes:
+        nodemanagers:
+
+    spark_clients:
+      hosts:
+        spark01:
+        spark02:
+        spark03:
+
+    spark_history_server:
+      hosts:
+        spark03:
+
+    gpu_nodes:
+      hosts:
+        spark01:
+        spark02:
+        spark03:

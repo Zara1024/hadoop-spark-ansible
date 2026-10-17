@@ -1,0 +1,17 @@
+---
+# ==============================================================================
+# Playbook 04: 离线部署 Spark 2.4.8 on YARN 与 HistoryServer (PDF 第四节与第八节)
+# ==============================================================================
+
+- name: 在 Spark 客户端节点安装配置 Spark 2.4.8
+  hosts: spark_clients
+  gather_facts: false
+  roles:
+    - spark
+
+- name: 初始化 Spark HDFS 依赖缓存与启动 History Server (PDF 第 37 & 45 页)
+  hosts: all_nodes
+  gather_facts: false
+  tasks:
+    - name: 导入 Spark HDFS 依赖与服务初始化任务
+      import_tasks: ../roles/spark/tasks/hdfs_init.yml

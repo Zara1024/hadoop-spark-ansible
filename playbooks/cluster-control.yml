@@ -1,0 +1,114 @@
+---
+# ==============================================================================
+# 集群统一运维管理剧本 (cluster-control.yml)
+# 对应 PDF 第五节 "重启集群" (支持 action=start / stop / restart / status)
+# ==============================================================================
+
+- name: 校验运维操作参数 action
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: 检查 action 参数有效性
+      assert:
+        that:
+          - action is defined
+          - action in ['start', 'stop', 'restart', 'status']
+        fail_msg: "请通过 -e 'action=start|stop|restart|status' 传递合法动作参数！"
+
+# ----------------- 停止服务 (按照逆序: Spark -> YARN -> HDFS -> ZooKeeper) -----------------
+- name: 停止 Spark History Server
+  hosts: spark_history_server
+  gather_facts: false
+  when: action in ['stop', 'restart']
+  tasks:
+    - name: 停止 History Server
+      systemd:
+        name: spark-history-server
+        state: stopped
+      ignore_errors: true
+
+- name: 停止 Hadoop 集群 (YARN + HDFS) (PDF 第 30~31 页)
+  hosts: spark01
+  gather_facts: false
+  when: action in ['stop', 'restart']
+  tasks:
+    - name: 停止 MapReduce JobHistoryServer
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/mr-jobhistory-daemon.sh stop historyserver
+      ignore_errors: true
+
+    - name: 停止备用 ResourceManager (spark03)
+      delegate_to: spark03
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/yarn-daemon.sh stop resourcemanager
+      ignore_errors: true
+
+    - name: 停止 YARN 全集群 (stop-yarn.sh)
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/stop-yarn.sh
+      ignore_errors: true
+
+    - name: 停止 HDFS 全集群 (stop-dfs.sh)
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/stop-dfs.sh
+      ignore_errors: true
+
+- name: 停止 ZooKeeper 集群服务
+  hosts: zookeepers
+  gather_facts: false
+  when: action in ['stop', 'restart']
+  tasks:
+    - name: 停止 ZooKeeper 服务
+      systemd:
+        name: zookeeper
+        state: stopped
+
+# ----------------- 启动服务 (按正序: ZooKeeper -> HDFS -> YARN -> Spark) -----------------
+- name: 启动 ZooKeeper 集群服务 (PDF 第 30 页)
+  hosts: zookeepers
+  gather_facts: false
+  when: action in ['start', 'restart']
+  tasks:
+    - name: 启动 ZooKeeper 服务
+      systemd:
+        name: zookeeper
+        state: started
+
+- name: 启动 Hadoop 集群 (HDFS + YARN) (PDF 第 31~32 页)
+  hosts: spark01
+  gather_facts: false
+  when: action in ['start', 'restart']
+  tasks:
+    - name: 启动 HDFS 全集群 (start-dfs.sh)
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/start-dfs.sh
+
+    - name: 启动 YARN 主集群 (start-yarn.sh)
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/start-yarn.sh
+
+    - name: 启动备用 ResourceManager (spark03)
+      delegate_to: spark03
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/yarn-daemon.sh start resourcemanager
+
+    - name: 启动 MapReduce JobHistoryServer
+      shell: source /etc/profile && {{ hadoop_install_dir }}/sbin/mr-jobhistory-daemon.sh start historyserver
+
+- name: 启动 Spark History Server (PDF 第 45 页)
+  hosts: spark_history_server
+  gather_facts: false
+  when: action in ['start', 'restart']
+  tasks:
+    - name: 启动 History Server
+      systemd:
+        name: spark-history-server
+        state: started
+
+# ----------------- 查看状态 (JPS 巡检) -----------------
+- name: 查看全集群进程状态
+  hosts: all_nodes
+  gather_facts: false
+  when: action in ['status', 'start', 'restart']
+  tasks:
+    - name: 执行 jps 检查
+      shell: source /etc/profile && jps
+      register: jps_out
+      changed_when: false
+
+    - name: 打印本节点运行中的 Java 进程
+      debug:
+        msg: "【{{ inventory_hostname }}】 -> {{ jps_out.stdout_lines }}"

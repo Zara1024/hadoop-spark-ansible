@@ -1,0 +1,31 @@
+---
+# ==============================================================================
+# Spark 配置下发任务 (PDF 第 28 页)
+# ==============================================================================
+
+- name: 渲染 spark-env.sh 配置文件 (PDF 第 28 页)
+  template:
+    src: spark-env.sh.j2
+    dest: "{{ spark_install_dir }}/conf/spark-env.sh"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0755'
+
+- name: 渲染 spark-defaults.conf 配置文件 (PDF 第 28, 37, 45 页)
+  template:
+    src: spark-defaults.conf.j2
+    dest: "{{ spark_install_dir }}/conf/spark-defaults.conf"
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
+
+- name: 配置 Spark slaves 文件 (PDF 第 28~29 页)
+  copy:
+    dest: "{{ spark_install_dir }}/conf/slaves"
+    content: |
+      {% for host in groups['spark_clients'] %}
+      {{ host }}
+      {% endfor %}
+    owner: "{{ bigdata_user }}"
+    group: "{{ bigdata_group }}"
+    mode: '0644'
